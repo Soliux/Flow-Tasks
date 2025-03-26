@@ -1,74 +1,273 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { useTodos } from "@/context/TodoContext";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { Ionicons } from "@expo/vector-icons";
+import { Todo } from "@/types/todo";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function TodoListScreen() {
+  const { todos, toggleTodo } = useTodos();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
-export default function HomeScreen() {
+  const { completedTasks, uncompletedTasks } = useMemo(() => {
+    return {
+      completedTasks: todos.filter((todo) => todo.completed),
+      uncompletedTasks: todos.filter((todo) => !todo.completed),
+    };
+  }, [todos]);
+
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const TaskItem = ({ todo }: { todo: Todo }) => (
+    <TouchableOpacity
+      key={todo.id}
+      style={[
+        styles.todoItem,
+        {
+          backgroundColor: isDark ? "#2a2a2a" : "#fff",
+          borderLeftColor: todo.color,
+        },
+      ]}
+      onPress={() => toggleTodo(todo.id)}
+    >
+      <View style={styles.todoContent}>
+        <Text
+          style={[
+            styles.todoTitle,
+            {
+              color: Colors[colorScheme ?? "light"].text,
+              textDecorationLine: todo.completed ? "line-through" : "none",
+              opacity: todo.completed ? 0.6 : 1,
+            },
+          ]}
+        >
+          {todo.title}
+        </Text>
+        <Text
+          style={[
+            styles.todoTime,
+            {
+              color: isDark ? "#888" : "#666",
+              opacity: todo.completed ? 0.6 : 1,
+            },
+          ]}
+        >
+          {formatDate(todo.time)}
+        </Text>
+      </View>
+      <View
+        style={[
+          styles.checkbox,
+          { borderColor: todo.color },
+          todo.completed && { backgroundColor: todo.color },
+        ]}
+      >
+        {todo.completed && (
+          <Ionicons name="checkmark" size={16} color="white" />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (todos.length === 0) {
+    return (
+      <ScrollView
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <View style={styles.emptyContainer}>
+          <Ionicons
+            name="list-circle-outline"
+            size={80}
+            color={isDark ? "#666" : "#ccc"}
+          />
+          <Text
+            style={[
+              styles.emptyTitle,
+              { color: Colors[colorScheme ?? "light"].text },
+            ]}
+          >
+            No tasks yet
+          </Text>
+          <Text style={[styles.emptyText, { color: isDark ? "#888" : "#666" }]}>
+            Add some tasks to get started with your day
+          </Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ScrollView
+      style={[
+        styles.container,
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+      ]}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.listContainer}>
+        {uncompletedTasks.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="time-outline"
+                size={24}
+                color={Colors[colorScheme ?? "light"].text}
+              />
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: Colors[colorScheme ?? "light"].text },
+                ]}
+              >
+                In Progress
+              </Text>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{uncompletedTasks.length}</Text>
+              </View>
+            </View>
+            {uncompletedTasks.map((todo) => (
+              <TaskItem key={todo.id} todo={todo} />
+            ))}
+          </View>
+        )}
+
+        {completedTasks.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={24}
+                color={Colors[colorScheme ?? "light"].text}
+              />
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: Colors[colorScheme ?? "light"].text },
+                ]}
+              >
+                Completed
+              </Text>
+              <View style={[styles.badge, { backgroundColor: "#4CAF50" }]}>
+                <Text style={styles.badgeText}>{completedTasks.length}</Text>
+              </View>
+            </View>
+            {completedTasks.map((todo) => (
+              <TaskItem key={todo.id} todo={todo} />
+            ))}
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  contentContainer: {
+    flexGrow: 1,
+  },
+  listContainer: {
+    padding: 16,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  badge: {
+    backgroundColor: "#FF6B6B",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 8,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "600",
+    marginTop: 16,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptyText: {
+    fontSize: 16,
+    textAlign: "center",
+  },
+  todoItem: {
+    flexDirection: "row",
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderLeftWidth: 4,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  todoContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  todoTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  todoTime: {
+    fontSize: 14,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
