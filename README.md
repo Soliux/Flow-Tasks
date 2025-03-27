@@ -140,6 +140,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Credits
+---
 
-Developed by [Soliux](https://github.com/Soliux)
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/Soliux">Soliux</a></sub>
+</div>
+
