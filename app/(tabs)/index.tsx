@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,13 +20,15 @@ export default function TodoListScreen() {
   const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
   const [timerTodos, setTimerTodos] = useState<Todo[]>([]);
   const [now, setNow] = useState(new Date());
+  const completedTimerIds = useRef<Set<string>>(new Set());
 
-  // Update timerTodos and now every second
+  // Update the timerTodos list
   useEffect(() => {
-    const timerTasks = todos.filter(
+    // Only filter uncompleted timer tasks
+    const activeTasks = todos.filter(
       (todo) => todo.isTimerTask && !todo.completed
     );
-    setTimerTodos(timerTasks);
+    setTimerTodos(activeTasks);
 
     const interval = setInterval(() => {
       setNow(new Date());
@@ -35,15 +37,39 @@ export default function TodoListScreen() {
     return () => clearInterval(interval);
   }, [todos]);
 
-  const { completedTasks, uncompletedTasks } = useMemo(() => {
-    // Regular tasks (non-timer)
-    const regularTasks = todos.filter((todo) => !todo.isTimerTask);
+  // Check for completed timers and mark them complete
+  useEffect(() => {
+    timerTodos.forEach((todo) => {
+      const remaining = getTimeRemainingValue(todo);
+      if (
+        remaining === 0 &&
+        !todo.completed &&
+        !completedTimerIds.current.has(todo.id)
+      ) {
+        completedTimerIds.current.add(todo.id);
+        toggleTodo(todo.id);
+      }
+    });
+  }, [now, timerTodos, toggleTodo]);
 
-    return {
-      completedTasks: regularTasks.filter((todo) => todo.completed),
-      uncompletedTasks: regularTasks.filter((todo) => !todo.completed),
-    };
-  }, [todos]);
+  const { completedTasks, uncompletedTasks, completedTimerTasks } =
+    useMemo(() => {
+      // Regular tasks (non-timer)
+      const regularTasks = todos.filter((todo) => !todo.isTimerTask);
+      // Timer tasks
+      const timerTasksArray = todos.filter((todo) => todo.isTimerTask);
+
+      return {
+        completedTasks: [
+          ...regularTasks.filter((todo) => todo.completed),
+          // Include completed timer tasks in completed section
+          ...timerTasksArray.filter((todo) => todo.completed),
+        ],
+        uncompletedTasks: regularTasks.filter((todo) => !todo.completed),
+        // Only active timer tasks
+        completedTimerTasks: timerTasksArray.filter((todo) => todo.completed),
+      };
+    }, [todos]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -62,20 +88,18 @@ export default function TodoListScreen() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const getTimeRemaining = (todo: Todo) => {
+  // This function now just calculates the value without side effects
+  const getTimeRemainingValue = (todo: Todo) => {
     if (!todo.timerStartTime || !todo.timerDuration) return 0;
 
     const startTime = new Date(todo.timerStartTime).getTime();
     const currentTime = now.getTime();
     const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
-    const remainingSeconds = Math.max(0, todo.timerDuration - elapsedSeconds);
+    return Math.max(0, todo.timerDuration - elapsedSeconds);
+  };
 
-    // Auto-complete the task if the timer is done
-    if (remainingSeconds === 0 && !todo.completed) {
-      toggleTodo(todo.id);
-    }
-
-    return remainingSeconds;
+  const getTimeRemaining = (todo: Todo) => {
+    return getTimeRemainingValue(todo);
   };
 
   const getTimerProgress = (todo: Todo) => {

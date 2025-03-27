@@ -101,7 +101,12 @@ export default function AddTodoScreen() {
         ]}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.card}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: isDark ? "#2a2a2a" : "#fff" },
+          ]}
+        >
           <View style={styles.inputContainer}>
             <Text
               style={[
@@ -115,7 +120,7 @@ export default function AddTodoScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isDark ? "#2a2a2a" : "#f5f5f5",
+                  backgroundColor: isDark ? "#3a3a3a" : "#f5f5f5",
                   color: Colors[colorScheme ?? "light"].text,
                 },
               ]}
@@ -139,7 +144,7 @@ export default function AddTodoScreen() {
               style={[
                 styles.textArea,
                 {
-                  backgroundColor: isDark ? "#2a2a2a" : "#f5f5f5",
+                  backgroundColor: isDark ? "#3a3a3a" : "#f5f5f5",
                   color: Colors[colorScheme ?? "light"].text,
                 },
               ]}
@@ -234,7 +239,7 @@ export default function AddTodoScreen() {
                 <TouchableOpacity
                   style={[
                     styles.dateButton,
-                    { backgroundColor: isDark ? "#2a2a2a" : "#f5f5f5" },
+                    { backgroundColor: isDark ? "#3a3a3a" : "#f5f5f5" },
                   ]}
                   onPress={() => setShowDatePicker(true)}
                 >
