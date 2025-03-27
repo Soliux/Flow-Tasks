@@ -47,8 +47,8 @@
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/Soliux/expo-todo-list.git
-cd expo-todo-list
+git clone https://github.com/Soliux/Flow-Tasks.git
+cd Flow-Tasks
 ```
 
 2. Install dependencies:
@@ -104,7 +104,7 @@ yarn start
 ## Project Structure
 
 ```
-expo-todo-list/
+Flow-Tasks/
 ├── app/                  # Main application code
 │   ├── (tabs)/           # Tab-based navigation screens
 │   │   ├── index.tsx     # Tasks list screen
