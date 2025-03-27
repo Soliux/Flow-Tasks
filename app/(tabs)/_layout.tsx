@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { HapticTab } from "@/components/HapticTab";
@@ -10,18 +10,20 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: true,
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: isDark ? "#1a1a1a" : "#f8f8f8",
+        },
+        headerTitle: () => null,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        headerTitleStyle: {
-          fontWeight: "bold",
-          fontSize: 24,
-        },
         tabBarStyle: Platform.select({
           ios: {
             position: "absolute",
@@ -41,7 +43,19 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "To Doer",
+          headerTitle: () => (
+            <View style={{ paddingLeft: 8 }}>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "700",
+                  color: isDark ? "#fff" : "#333",
+                }}
+              >
+                My Tasks
+              </Text>
+            </View>
+          ),
           tabBarLabel: "Tasks",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="list" size={size} color={color} />
@@ -51,7 +65,19 @@ export default function TabLayout() {
       <Tabs.Screen
         name="add"
         options={{
-          title: "New Task",
+          headerTitle: () => (
+            <View style={{ paddingLeft: 8 }}>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "700",
+                  color: isDark ? "#fff" : "#333",
+                }}
+              >
+                Create Task
+              </Text>
+            </View>
+          ),
           tabBarLabel: "Add",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle" size={size} color={color} />

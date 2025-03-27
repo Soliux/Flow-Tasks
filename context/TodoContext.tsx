@@ -11,6 +11,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
       ...todo,
       id: Date.now().toString(),
       completed: false,
+      timerStartTime: todo.isTimerTask ? new Date().toISOString() : undefined,
     };
     setTodos((prev) => [...prev, newTodo]);
   };
@@ -23,8 +24,24 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const updateTimerStatus = (id: string, isActive: boolean) => {
+    setTodos((prev) =>
+      prev.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            timerStartTime: isActive ? new Date().toISOString() : undefined,
+          };
+        }
+        return todo;
+      })
+    );
+  };
+
   return (
-    <TodoContext.Provider value={{ todos, addTodo, toggleTodo }}>
+    <TodoContext.Provider
+      value={{ todos, addTodo, toggleTodo, updateTimerStatus }}
+    >
       {children}
     </TodoContext.Provider>
   );
