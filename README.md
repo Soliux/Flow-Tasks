@@ -31,8 +31,8 @@
 ## Screenshots
 
 <div align="center">
-  <img src="https://i.ibb.co/8gLZBGBt/SCR-20250327-elcs.png" alt="FlowTasks Home Page" width="400"/>
-  <img src="https://i.ibb.co/JjDjfcBf/SCR-20250327-elix.png" alt="FlowTasks Tasks Page" width="400"/>
+  <img src="https://i.ibb.co/8gLZBGBt/SCR-20250327-elcs.png" alt="FlowTasks Home Page" />
+  <img src="https://i.ibb.co/JjDjfcBf/SCR-20250327-elix.png" alt="FlowTasks Tasks Page"/>
 </div>
 
 ## Installation
