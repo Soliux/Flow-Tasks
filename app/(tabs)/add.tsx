@@ -532,20 +532,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 24,
+    paddingTop: 28,
+    paddingBottom: Platform.OS === "ios" ? 100 : 80,
   },
   formSection: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
-    marginBottom: 12,
+    marginBottom: 16,
     letterSpacing: 0.5,
   },
   card: {
-    padding: 20,
+    padding: 24,
     borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: {
@@ -559,7 +560,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   inputWithIcon: {
     position: "relative",

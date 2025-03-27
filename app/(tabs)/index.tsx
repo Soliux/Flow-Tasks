@@ -7,12 +7,14 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Platform,
 } from "react-native";
 import { useTodos } from "@/context/TodoContext";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Todo } from "@/types/todo";
+import { useRouter } from "expo-router";
 
 const GRADIENTS = {
   dark: ["#1f1f2c", "#2d2d44"],
@@ -28,6 +30,7 @@ export default function TodoListScreen() {
   const [now, setNow] = useState(new Date());
   const completedTimerIds = useRef<Set<string>>(new Set());
   const gradientColors = isDark ? GRADIENTS.dark : GRADIENTS.light;
+  const router = useRouter();
 
   // Define styles inside the component so we have access to isDark
   const styles = StyleSheet.create({
@@ -36,20 +39,21 @@ export default function TodoListScreen() {
       backgroundColor: isDark ? GRADIENTS.dark[0] : GRADIENTS.light[0],
     },
     contentContainer: {
-      padding: 16,
-      paddingTop: 24,
+      padding: 20,
+      paddingTop: 28,
+      paddingBottom: Platform.OS === "ios" ? 100 : 80,
     },
     listContainer: {
-      gap: 24,
+      gap: 28,
     },
     section: {
-      marginBottom: 24,
+      marginBottom: 28,
     },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: 16,
     },
     sectionHeaderLeft: {
       flexDirection: "row",
@@ -72,7 +76,7 @@ export default function TodoListScreen() {
     },
     todoItem: {
       borderRadius: 16,
-      marginBottom: 12,
+      marginBottom: 16,
       shadowOffset: {
         width: 0,
         height: 3,
@@ -82,7 +86,7 @@ export default function TodoListScreen() {
       elevation: 5,
     },
     todoContent: {
-      padding: 16,
+      padding: 18,
     },
     todoHeader: {
       flexDirection: "row",
@@ -173,13 +177,75 @@ export default function TodoListScreen() {
     emptyContainer: {
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 100,
+      paddingHorizontal: 32,
+      flex: 1,
+    },
+    emptyStateVisual: {
+      position: "relative",
+      marginBottom: 32,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyCircle: {
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: isDark
+        ? "rgba(120, 104, 230, 0.15)"
+        : "rgba(120, 104, 230, 0.1)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 8,
+    },
+    emptyDecorations: {
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+    },
+    emptySmallCircle: {
+      position: "absolute",
+      width: 16,
+      height: 16,
+      borderRadius: 8,
       opacity: 0.8,
     },
+    emptyTitle: {
+      fontSize: 28,
+      fontWeight: "700",
+      marginBottom: 16,
+      textAlign: "center",
+      letterSpacing: 0.5,
+    },
     emptyText: {
-      marginTop: 16,
       fontSize: 16,
       textAlign: "center",
+      lineHeight: 22,
+      marginBottom: 32,
+    },
+    emptyAddButton: {
+      flexDirection: "row",
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 5,
+      elevation: 6,
+    },
+    emptyAddButtonText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    emptyContentContainer: {
+      flexGrow: 1,
+      justifyContent: "center",
     },
     timerTimeWrapper: {
       flexDirection: "row",
@@ -364,7 +430,7 @@ export default function TodoListScreen() {
                 )}
               </TouchableOpacity>
 
-              <View style={{ marginLeft: 12, flex: 1 }}>
+              <View style={{ marginLeft: 14, flex: 1 }}>
                 <Text
                   style={[
                     styles.todoTitle,
@@ -384,7 +450,7 @@ export default function TodoListScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    marginTop: 4,
+                    marginTop: 6,
                   }}
                 >
                   <Ionicons
@@ -579,24 +645,94 @@ export default function TodoListScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons
-        name="list-outline"
-        size={48}
-        color={isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"}
-      />
+      <View style={styles.emptyStateVisual}>
+        <View style={styles.emptyCircle}>
+          <Ionicons
+            name="checkmark-done-outline"
+            size={80}
+            color={isDark ? "#7868e6" : "#6558d1"}
+          />
+        </View>
+        <View style={styles.emptyDecorations}>
+          <View
+            style={[
+              styles.emptySmallCircle,
+              {
+                backgroundColor: "#FF6B6B",
+                top: -20,
+                right: -15,
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.emptySmallCircle,
+              {
+                backgroundColor: "#4ECDC4",
+                bottom: 10,
+                left: -10,
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.emptySmallCircle,
+              {
+                backgroundColor: "#45B7D1",
+                top: 40,
+                right: -20,
+                width: 12,
+                height: 12,
+              },
+            ]}
+          />
+        </View>
+      </View>
+      <Text
+        style={[styles.emptyTitle, { color: isDark ? "#ffffff" : "#2d2d3a" }]}
+      >
+        All Caught Up!
+      </Text>
       <Text
         style={[
           styles.emptyText,
-          { color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" },
+          { color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.5)" },
         ]}
       >
-        No tasks yet. Tap + to add one!
+        Tap the + button to add your first task and start being productive.
       </Text>
+
+      <TouchableOpacity
+        style={[styles.emptyAddButton, { backgroundColor: "#7868e6" }]}
+        onPress={() => router.push("/(tabs)/add")}
+        activeOpacity={0.8}
+      >
+        <Ionicons
+          name="add-circle-outline"
+          size={22}
+          color="white"
+          style={{ marginRight: 8 }}
+        />
+        <Text style={styles.emptyAddButtonText}>Create New Task</Text>
+      </TouchableOpacity>
     </View>
   );
 
   if (todos.length === 0) {
-    return renderEmptyState();
+    return (
+      <>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={[
+            styles.contentContainer,
+            styles.emptyContentContainer,
+          ]}
+        >
+          {renderEmptyState()}
+        </ScrollView>
+      </>
+    );
   }
 
   const renderSectionHeader = (
@@ -682,8 +818,6 @@ export default function TodoListScreen() {
               ))}
             </View>
           )}
-
-          {todos.length === 0 && renderEmptyState()}
         </View>
       </ScrollView>
     </>
