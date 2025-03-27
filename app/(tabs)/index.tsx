@@ -6,12 +6,18 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  StatusBar,
 } from "react-native";
 import { useTodos } from "@/context/TodoContext";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Todo } from "@/types/todo";
+
+const GRADIENTS = {
+  dark: ["#1f1f2c", "#2d2d44"],
+  light: ["#f0f2ff", "#e4e7fc"],
+};
 
 export default function TodoListScreen() {
   const { todos, toggleTodo } = useTodos();
@@ -21,6 +27,161 @@ export default function TodoListScreen() {
   const [timerTodos, setTimerTodos] = useState<Todo[]>([]);
   const [now, setNow] = useState(new Date());
   const completedTimerIds = useRef<Set<string>>(new Set());
+  const gradientColors = isDark ? GRADIENTS.dark : GRADIENTS.light;
+
+  // Define styles inside the component so we have access to isDark
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? GRADIENTS.dark[0] : GRADIENTS.light[0],
+    },
+    contentContainer: {
+      padding: 16,
+      paddingTop: 24,
+    },
+    listContainer: {
+      gap: 24,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    sectionHeaderLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      letterSpacing: 0.3,
+    },
+    countBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    countText: {
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    todoItem: {
+      borderRadius: 16,
+      marginBottom: 12,
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4.5,
+      elevation: 5,
+    },
+    todoContent: {
+      padding: 16,
+    },
+    todoHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    todoTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      flex: 1,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 22,
+      borderWidth: 2,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    todoDescription: {
+      marginTop: 8,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    descriptionContainer: {
+      marginTop: 12,
+    },
+    viewDetailsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 4,
+    },
+    timerItem: {
+      marginBottom: 12,
+      padding: 16,
+      borderRadius: 16,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 5,
+      elevation: 6,
+    },
+    timerHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    timerInfo: {
+      flex: 1,
+    },
+    timerTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    timerTimeDisplay: {
+      fontSize: 24,
+      fontWeight: "700",
+    },
+    timerCheckbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    timerProgressContainer: {
+      marginBottom: 12,
+    },
+    timerProgressBar: {
+      height: 8,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    timerProgress: {
+      height: "100%",
+    },
+    timerDescription: {
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 100,
+      opacity: 0.8,
+    },
+    emptyText: {
+      marginTop: 16,
+      fontSize: 16,
+      textAlign: "center",
+    },
+  });
 
   // Update the timerTodos list
   useEffect(() => {
@@ -112,14 +273,23 @@ export default function TodoListScreen() {
     const isExpanded = expandedTodoId === todo.id;
     const hasDescription = todo.description && todo.description.length > 0;
 
+    // Generate color with transparency for card background
+    const cardBgColor = isDark
+      ? `${todo.color}22` // 13% opacity for dark mode
+      : `${todo.color}15`; // 8% opacity for light mode
+
     return (
       <TouchableOpacity
         key={todo.id}
         style={[
           styles.todoItem,
           {
-            backgroundColor: isDark ? "#2a2a2a" : "#fff",
+            backgroundColor: cardBgColor,
             borderLeftColor: todo.color,
+            borderLeftWidth: 4,
+            shadowColor: todo.color,
+            opacity: todo.completed ? 0.8 : 1,
+            transform: [{ scale: todo.completed ? 0.98 : 1 }],
           },
         ]}
         onPress={() => {
@@ -130,79 +300,82 @@ export default function TodoListScreen() {
           }
         }}
         onLongPress={() => toggleTodo(todo.id)}
+        activeOpacity={0.7}
       >
         <View style={styles.todoContent}>
           <View style={styles.todoHeader}>
-            <Text
-              style={[
-                styles.todoTitle,
-                {
-                  color: Colors[colorScheme ?? "light"].text,
-                  textDecorationLine: todo.completed ? "line-through" : "none",
-                  opacity: todo.completed ? 0.6 : 1,
-                },
-              ]}
-            >
-              {todo.title}
-            </Text>
-
             <View
-              style={[
-                styles.checkbox,
-                { borderColor: todo.color },
-                todo.completed && { backgroundColor: todo.color },
-              ]}
+              style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
             >
-              {todo.completed && (
-                <Ionicons name="checkmark" size={16} color="white" />
-              )}
-            </View>
-          </View>
+              <View
+                style={[
+                  styles.checkbox,
+                  { borderColor: todo.color },
+                  todo.completed && { backgroundColor: todo.color },
+                ]}
+              >
+                {todo.completed && (
+                  <Ionicons name="checkmark" size={16} color="white" />
+                )}
+              </View>
 
-          <Text
-            style={[
-              styles.todoTime,
-              {
-                color: isDark ? "#888" : "#666",
-                opacity: todo.completed ? 0.6 : 1,
-              },
-            ]}
-          >
-            {formatDate(todo.time)}
-          </Text>
-
-          {hasDescription && isExpanded && (
-            <View style={styles.descriptionContainer}>
               <Text
                 style={[
-                  styles.description,
+                  styles.todoTitle,
                   {
-                    color: Colors[colorScheme ?? "light"].text,
-                    opacity: todo.completed ? 0.6 : 0.9,
+                    color: isDark ? "#ffffff" : "#2d2d3a",
+                    textDecorationLine: todo.completed
+                      ? "line-through"
+                      : "none",
+                    opacity: todo.completed ? 0.7 : 1,
+                    marginLeft: 12,
                   },
                 ]}
               >
-                {todo.description}
+                {todo.title}
               </Text>
             </View>
-          )}
 
-          {hasDescription && !isExpanded && (
-            <View style={styles.expandIndicator}>
-              <Ionicons
-                name="chevron-down"
-                size={16}
-                color={isDark ? "#888" : "#666"}
-              />
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: isDark ? "#888" : "#666",
-                  marginLeft: 4,
-                }}
-              >
-                View details
-              </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: isDark ? "#adb5bd" : "#5a5a6e",
+                opacity: 0.8,
+              }}
+            >
+              {formatDate(todo.time)}
+            </Text>
+          </View>
+
+          {hasDescription && (
+            <View style={styles.descriptionContainer}>
+              {isExpanded ? (
+                <Text
+                  style={[
+                    styles.todoDescription,
+                    { color: isDark ? "#e9ecef" : "#3f3f52" },
+                  ]}
+                >
+                  {todo.description}
+                </Text>
+              ) : (
+                <View style={styles.viewDetailsRow}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={14}
+                    color={isDark ? "#adb5bd" : "#5a5a6e"}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDark ? "#adb5bd" : "#5a5a6e",
+                      marginLeft: 4,
+                    }}
+                  >
+                    View details
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -214,39 +387,67 @@ export default function TodoListScreen() {
     const remaining = getTimeRemaining(todo);
     const progress = getTimerProgress(todo);
 
+    const progressBarBgColor = isDark
+      ? "rgba(255, 255, 255, 0.15)"
+      : "rgba(0, 0, 0, 0.08)";
+
+    // Format remaining time
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    const formattedTime = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
     return (
       <View
         style={[
           styles.timerItem,
           {
-            backgroundColor: isDark ? "#2a2a2a" : "#fff",
+            backgroundColor: `${todo.color}22`,
             borderColor: todo.color,
+            borderWidth: 1,
+            borderRadius: 16,
           },
         ]}
       >
         <View style={styles.timerHeader}>
-          <Text
-            style={[
-              styles.timerTitle,
-              { color: Colors[colorScheme ?? "light"].text },
-            ]}
-          >
-            {todo.title}
-          </Text>
+          <View style={styles.timerInfo}>
+            <Text
+              style={[
+                styles.timerTitle,
+                { color: isDark ? "#ffffff" : "#2d2d3a" },
+              ]}
+            >
+              {todo.title}
+            </Text>
+
+            <Text style={[styles.timerTimeDisplay, { color: todo.color }]}>
+              {formattedTime}
+            </Text>
+          </View>
+
           <TouchableOpacity
-            style={[styles.timerCheckbox, { borderColor: todo.color }]}
+            style={[
+              styles.timerCheckbox,
+              {
+                borderColor: todo.color,
+                backgroundColor: todo.completed ? todo.color : "transparent",
+              },
+            ]}
             onPress={() => toggleTodo(todo.id)}
-          />
+          >
+            {todo.completed && (
+              <Ionicons name="checkmark" size={16} color="white" />
+            )}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.timerProgressContainer}>
           <View
             style={[
               styles.timerProgressBar,
-              { backgroundColor: isDark ? "#444" : "#eee" },
+              { backgroundColor: progressBarBgColor },
             ]}
           >
-            <View
+            <Animated.View
               style={[
                 styles.timerProgress,
                 {
@@ -256,298 +457,135 @@ export default function TodoListScreen() {
               ]}
             />
           </View>
+        </View>
+
+        {todo.description && (
           <Text
             style={[
-              styles.timerText,
-              { color: Colors[colorScheme ?? "light"].text },
+              styles.timerDescription,
+              {
+                color: isDark
+                  ? "rgba(255, 255, 255, 0.7)"
+                  : "rgba(0, 0, 0, 0.6)",
+              },
             ]}
           >
-            {formatTimerDuration(remaining)}
+            {todo.description}
           </Text>
-        </View>
+        )}
       </View>
     );
   };
 
-  if (todos.length === 0) {
-    return (
-      <ScrollView
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons
+        name="list-outline"
+        size={48}
+        color={isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"}
+      />
+      <Text
         style={[
-          styles.container,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          styles.emptyText,
+          { color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" },
         ]}
-        contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.emptyContainer}>
-          <Ionicons
-            name="list-circle-outline"
-            size={80}
-            color={isDark ? "#666" : "#ccc"}
-          />
-          <Text
-            style={[
-              styles.emptyTitle,
-              { color: Colors[colorScheme ?? "light"].text },
-            ]}
-          >
-            No tasks yet
-          </Text>
-          <Text style={[styles.emptyText, { color: isDark ? "#888" : "#666" }]}>
-            Add some tasks to get started with your day
-          </Text>
-        </View>
-      </ScrollView>
-    );
+        No tasks yet. Tap + to add one!
+      </Text>
+    </View>
+  );
+
+  if (todos.length === 0) {
+    return renderEmptyState();
   }
 
-  return (
-    <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.listContainer}>
-        {uncompletedTasks.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons
-                name="time-outline"
-                size={24}
-                color={Colors[colorScheme ?? "light"].text}
-              />
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { color: Colors[colorScheme ?? "light"].text },
-                ]}
-              >
-                In Progress
-              </Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{uncompletedTasks.length}</Text>
-              </View>
-            </View>
-            {uncompletedTasks.map((todo) => (
-              <TaskItem key={todo.id} todo={todo} />
-            ))}
-          </View>
-        )}
-
-        {completedTasks.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={24}
-                color={Colors[colorScheme ?? "light"].text}
-              />
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { color: Colors[colorScheme ?? "light"].text },
-                ]}
-              >
-                Completed
-              </Text>
-              <View style={[styles.badge, { backgroundColor: "#4CAF50" }]}>
-                <Text style={styles.badgeText}>{completedTasks.length}</Text>
-              </View>
-            </View>
-            {completedTasks.map((todo) => (
-              <TaskItem key={todo.id} todo={todo} />
-            ))}
-          </View>
-        )}
-
-        {timerTodos.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons
-                name="timer-outline"
-                size={24}
-                color={Colors[colorScheme ?? "light"].text}
-              />
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { color: Colors[colorScheme ?? "light"].text },
-                ]}
-              >
-                Timers
-              </Text>
-              <View style={[styles.badge, { backgroundColor: "#FF9800" }]}>
-                <Text style={styles.badgeText}>{timerTodos.length}</Text>
-              </View>
-            </View>
-            {timerTodos.map((todo) => (
-              <TimerTaskItem key={todo.id} todo={todo} />
-            ))}
-          </View>
-        )}
+  const renderSectionHeader = (
+    title: string,
+    icon: any,
+    count: number,
+    badgeColor: string
+  ) => (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionHeaderLeft}>
+        <Ionicons
+          name={icon}
+          size={22}
+          color={isDark ? badgeColor : badgeColor}
+          style={{ marginRight: 10 }}
+        />
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: isDark ? "#ffffff" : "#2d2d3a" },
+          ]}
+        >
+          {title}
+        </Text>
       </View>
-    </ScrollView>
+      <View
+        style={[
+          styles.countBadge,
+          { backgroundColor: `${badgeColor}22`, borderColor: badgeColor },
+        ]}
+      >
+        <Text style={[styles.countText, { color: badgeColor }]}>{count}</Text>
+      </View>
+    </View>
+  );
+
+  return (
+    <>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <View style={styles.listContainer}>
+          {uncompletedTasks.length > 0 && (
+            <View style={styles.section}>
+              {renderSectionHeader(
+                "Tasks",
+                "time-outline" as any,
+                uncompletedTasks.length,
+                "#7868e6"
+              )}
+              {uncompletedTasks.map((todo) => (
+                <TaskItem key={todo.id} todo={todo} />
+              ))}
+            </View>
+          )}
+
+          {timerTodos.length > 0 && (
+            <View style={styles.section}>
+              {renderSectionHeader(
+                "Timers",
+                "timer-outline" as any,
+                timerTodos.length,
+                "#FF9800"
+              )}
+              {timerTodos.map((todo) => (
+                <TimerTaskItem key={todo.id} todo={todo} />
+              ))}
+            </View>
+          )}
+
+          {completedTasks.length > 0 && (
+            <View style={styles.section}>
+              {renderSectionHeader(
+                "Completed",
+                "checkmark-circle-outline" as any,
+                completedTasks.length,
+                "#4BB543"
+              )}
+              {completedTasks.map((todo) => (
+                <TaskItem key={todo.id} todo={todo} />
+              ))}
+            </View>
+          )}
+
+          {todos.length === 0 && renderEmptyState()}
+        </View>
+      </ScrollView>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-  },
-  listContainer: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  badge: {
-    backgroundColor: "#FF6B6B",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 8,
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-  todoItem: {
-    flexDirection: "row",
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    borderLeftWidth: 4,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  todoContent: {
-    flex: 1,
-  },
-  todoHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  todoTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: 6,
-    flex: 1,
-  },
-  todoTime: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  descriptionContainer: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  expandIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  timerItem: {
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    borderWidth: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  timerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  timerTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  timerCheckbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  timerProgressContainer: {
-    alignItems: "center",
-  },
-  timerProgressBar: {
-    width: "100%",
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  timerProgress: {
-    height: "100%",
-  },
-  timerText: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-});
