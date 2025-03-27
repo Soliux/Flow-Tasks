@@ -56,19 +56,13 @@ export default function AddTodoScreen() {
 
   // Animation values
   const buttonScale = new Animated.Value(1);
-  const timerOpacity = new Animated.Value(0);
 
   const { addTodo } = useTodos();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   useEffect(() => {
-    // Animate timer options in/out when toggled
-    Animated.timing(timerOpacity, {
-      toValue: isTimerTask ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    // No opacity animations for timer container
   }, [isTimerTask]);
 
   const resetForm = () => {
@@ -360,56 +354,49 @@ export default function AddTodoScreen() {
                 />
               </View>
 
-              <Animated.View
-                style={[
-                  styles.timerContainer,
-                  {
-                    opacity: timerOpacity,
-                    height: isTimerTask ? "auto" : 0,
-                    overflow: "hidden",
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.timerLabel,
-                    { color: isDark ? selectedColor : selectedColor },
-                  ]}
-                >
-                  {formatTimerDuration(timerDuration)}
-                </Text>
-                <Slider
-                  style={{ width: "100%", height: 40 }}
-                  minimumValue={5}
-                  maximumValue={300}
-                  step={5}
-                  value={timerDuration}
-                  onValueChange={setTimerDuration}
-                  minimumTrackTintColor={selectedColor}
-                  maximumTrackTintColor={
-                    isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"
-                  }
-                  thumbTintColor={selectedColor}
-                />
-                <View style={styles.timerLabelsContainer}>
+              {isTimerTask && (
+                <View style={styles.timerContainer}>
                   <Text
-                    style={{
-                      color: isDark ? "#adb5bd" : "#5a5a6e",
-                      fontSize: 12,
-                    }}
+                    style={[
+                      styles.timerLabel,
+                      { color: isDark ? selectedColor : selectedColor },
+                    ]}
                   >
-                    5 sec
+                    {formatTimerDuration(timerDuration)}
                   </Text>
-                  <Text
-                    style={{
-                      color: isDark ? "#adb5bd" : "#5a5a6e",
-                      fontSize: 12,
-                    }}
-                  >
-                    5 min
-                  </Text>
+                  <Slider
+                    style={{ width: "100%", height: 40 }}
+                    minimumValue={5}
+                    maximumValue={300}
+                    step={5}
+                    value={timerDuration}
+                    onValueChange={setTimerDuration}
+                    minimumTrackTintColor={selectedColor}
+                    maximumTrackTintColor={
+                      isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"
+                    }
+                    thumbTintColor={selectedColor}
+                  />
+                  <View style={styles.timerLabelsContainer}>
+                    <Text
+                      style={{
+                        color: isDark ? "#adb5bd" : "#5a5a6e",
+                        fontSize: 12,
+                      }}
+                    >
+                      5 sec
+                    </Text>
+                    <Text
+                      style={{
+                        color: isDark ? "#adb5bd" : "#5a5a6e",
+                        fontSize: 12,
+                      }}
+                    >
+                      5 min
+                    </Text>
+                  </View>
                 </View>
-              </Animated.View>
+              )}
 
               {!isTimerTask && (
                 <>
@@ -636,8 +623,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timerContainer: {
-    marginBottom: 20,
     alignItems: "center",
+    backgroundColor: "transparent",
+    marginTop: 20,
+    marginBottom: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   timerLabel: {
     fontSize: 36,
