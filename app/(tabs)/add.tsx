@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -11,6 +11,7 @@ import {
   Switch,
   Alert,
   StatusBar,
+  Animated,
 } from "react-native";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -33,6 +34,16 @@ const COLORS = [
   "#3498DB",
 ];
 
+// Task category icons
+const TASK_CATEGORIES = [
+  { name: "Work", icon: "briefcase-outline", color: "#FF6B6B" },
+  { name: "Personal", icon: "person-outline", color: "#4ECDC4" },
+  { name: "Health", icon: "fitness-outline", color: "#45B7D1" },
+  { name: "Shopping", icon: "cart-outline", color: "#9B59B6" },
+  { name: "Home", icon: "home-outline", color: "#FFEEAD" },
+  { name: "Education", icon: "book-outline", color: "#3498DB" },
+];
+
 export default function AddTodoScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -41,9 +52,24 @@ export default function AddTodoScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isTimerTask, setIsTimerTask] = useState(false);
   const [timerDuration, setTimerDuration] = useState(60); // 60 seconds default
+  const [selectedCategory, setSelectedCategory] = useState(TASK_CATEGORIES[0]);
+
+  // Animation values
+  const buttonScale = new Animated.Value(1);
+  const timerOpacity = new Animated.Value(0);
+
   const { addTodo } = useTodos();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  useEffect(() => {
+    // Animate timer options in/out when toggled
+    Animated.timing(timerOpacity, {
+      toValue: isTimerTask ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isTimerTask]);
 
   const resetForm = () => {
     setTitle("");
@@ -52,6 +78,25 @@ export default function AddTodoScreen() {
     setDate(new Date());
     setIsTimerTask(false);
     setTimerDuration(60);
+    setSelectedCategory(TASK_CATEGORIES[0]);
+  };
+
+  const handleButtonPressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      friction: 5,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleButtonPressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleSubmit = () => {
@@ -135,26 +180,89 @@ export default function AddTodoScreen() {
                 >
                   Task Title
                 </Text>
-                <TextInput
+                <View style={styles.inputWithIcon}>
+                  <Ionicons
+                    name="create-outline"
+                    size={22}
+                    color={selectedColor}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(0, 0, 0, 0.2)"
+                          : "rgba(0, 0, 0, 0.03)",
+                        color: isDark ? "#ffffff" : "#2d2d3a",
+                        borderColor: isDark
+                          ? "rgba(255, 255, 255, 0.1)"
+                          : "rgba(0, 0, 0, 0.1)",
+                      },
+                    ]}
+                    value={title}
+                    onChangeText={setTitle}
+                    placeholder="What needs to be done?"
+                    placeholderTextColor={
+                      isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
+                    }
+                  />
+                </View>
+              </View>
+
+              <View style={styles.categorySection}>
+                <Text
                   style={[
-                    styles.input,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(0, 0, 0, 0.2)"
-                        : "rgba(0, 0, 0, 0.03)",
-                      color: isDark ? "#ffffff" : "#2d2d3a",
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.1)"
-                        : "rgba(0, 0, 0, 0.1)",
-                    },
+                    styles.label,
+                    { color: isDark ? "#e9ecef" : "#3f3f52" },
                   ]}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="What needs to be done?"
-                  placeholderTextColor={
-                    isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
-                  }
-                />
+                >
+                  Category
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.categoryList}
+                >
+                  {TASK_CATEGORIES.map((category) => (
+                    <TouchableOpacity
+                      key={category.name}
+                      style={[
+                        styles.categoryItem,
+                        {
+                          backgroundColor:
+                            selectedCategory.name === category.name
+                              ? `${category.color}33`
+                              : isDark
+                              ? "rgba(255, 255, 255, 0.05)"
+                              : "rgba(0, 0, 0, 0.03)",
+                          borderColor:
+                            selectedCategory.name === category.name
+                              ? category.color
+                              : "transparent",
+                        },
+                      ]}
+                      onPress={() => {
+                        setSelectedCategory(category);
+                        setSelectedColor(category.color);
+                      }}
+                    >
+                      <Ionicons
+                        name={category.icon as any}
+                        size={22}
+                        color={category.color}
+                      />
+                      <Text
+                        style={[
+                          styles.categoryName,
+                          { color: isDark ? "#e9ecef" : "#3f3f52" },
+                        ]}
+                      >
+                        {category.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
 
               <View style={styles.inputContainer}>
@@ -166,29 +274,37 @@ export default function AddTodoScreen() {
                 >
                   Description (optional)
                 </Text>
-                <TextInput
-                  style={[
-                    styles.textArea,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(0, 0, 0, 0.2)"
-                        : "rgba(0, 0, 0, 0.03)",
-                      color: isDark ? "#ffffff" : "#2d2d3a",
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.1)"
-                        : "rgba(0, 0, 0, 0.1)",
-                    },
-                  ]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Add details about your task..."
-                  placeholderTextColor={
-                    isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
-                  }
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
+                <View style={styles.textAreaContainer}>
+                  <TextInput
+                    style={[
+                      styles.textArea,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(0, 0, 0, 0.2)"
+                          : "rgba(0, 0, 0, 0.03)",
+                        color: isDark ? "#ffffff" : "#2d2d3a",
+                        borderColor: isDark
+                          ? "rgba(255, 255, 255, 0.1)"
+                          : "rgba(0, 0, 0, 0.1)",
+                      },
+                    ]}
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholder="Add details about your task..."
+                    placeholderTextColor={
+                      isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
+                    }
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+                  <Ionicons
+                    name="list-outline"
+                    size={20}
+                    color={selectedColor}
+                    style={[styles.textAreaIcon, { opacity: 0.7 }]}
+                  />
+                </View>
               </View>
             </View>
           </View>
@@ -244,49 +360,58 @@ export default function AddTodoScreen() {
                 />
               </View>
 
-              {isTimerTask ? (
-                <View style={styles.timerContainer}>
+              <Animated.View
+                style={[
+                  styles.timerContainer,
+                  {
+                    opacity: timerOpacity,
+                    height: isTimerTask ? "auto" : 0,
+                    overflow: "hidden",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.timerLabel,
+                    { color: isDark ? selectedColor : selectedColor },
+                  ]}
+                >
+                  {formatTimerDuration(timerDuration)}
+                </Text>
+                <Slider
+                  style={{ width: "100%", height: 40 }}
+                  minimumValue={5}
+                  maximumValue={300}
+                  step={5}
+                  value={timerDuration}
+                  onValueChange={setTimerDuration}
+                  minimumTrackTintColor={selectedColor}
+                  maximumTrackTintColor={
+                    isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"
+                  }
+                  thumbTintColor={selectedColor}
+                />
+                <View style={styles.timerLabelsContainer}>
                   <Text
-                    style={[
-                      styles.timerLabel,
-                      { color: isDark ? selectedColor : selectedColor },
-                    ]}
+                    style={{
+                      color: isDark ? "#adb5bd" : "#5a5a6e",
+                      fontSize: 12,
+                    }}
                   >
-                    {formatTimerDuration(timerDuration)}
+                    5 sec
                   </Text>
-                  <Slider
-                    style={{ width: "100%", height: 40 }}
-                    minimumValue={5}
-                    maximumValue={300}
-                    step={5}
-                    value={timerDuration}
-                    onValueChange={setTimerDuration}
-                    minimumTrackTintColor={selectedColor}
-                    maximumTrackTintColor={
-                      isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"
-                    }
-                    thumbTintColor={selectedColor}
-                  />
-                  <View style={styles.timerLabelsContainer}>
-                    <Text
-                      style={{
-                        color: isDark ? "#adb5bd" : "#5a5a6e",
-                        fontSize: 12,
-                      }}
-                    >
-                      5 sec
-                    </Text>
-                    <Text
-                      style={{
-                        color: isDark ? "#adb5bd" : "#5a5a6e",
-                        fontSize: 12,
-                      }}
-                    >
-                      5 min
-                    </Text>
-                  </View>
+                  <Text
+                    style={{
+                      color: isDark ? "#adb5bd" : "#5a5a6e",
+                      fontSize: 12,
+                    }}
+                  >
+                    5 min
+                  </Text>
                 </View>
-              ) : (
+              </Animated.View>
+
+              {!isTimerTask && (
                 <>
                   <View style={styles.section}>
                     <Text
@@ -380,13 +505,22 @@ export default function AddTodoScreen() {
             </View>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: selectedColor }]}
-            onPress={handleSubmit}
+          <Animated.View
+            style={{
+              transform: [{ scale: buttonScale }],
+            }}
           >
-            <Ionicons name="add-circle-outline" size={24} color="white" />
-            <Text style={styles.buttonText}>Create Task</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: selectedColor }]}
+              onPress={handleSubmit}
+              onPressIn={handleButtonPressIn}
+              onPressOut={handleButtonPressOut}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle-outline" size={24} color="white" />
+              <Text style={styles.buttonText}>Create Task</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -427,6 +561,16 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
+  inputWithIcon: {
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  inputIcon: {
+    position: "absolute",
+    left: 12,
+    zIndex: 1,
+  },
   section: {
     marginBottom: 20,
   },
@@ -440,8 +584,13 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 12,
     paddingHorizontal: 16,
+    paddingLeft: 44,
     fontSize: 16,
     borderWidth: 1,
+    flex: 1,
+  },
+  textAreaContainer: {
+    position: "relative",
   },
   textArea: {
     height: 120,
@@ -450,6 +599,30 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     fontSize: 16,
     borderWidth: 1,
+  },
+  textAreaIcon: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+  },
+  categorySection: {
+    marginBottom: 20,
+  },
+  categoryList: {
+    paddingVertical: 8,
+    gap: 10,
+  },
+  categoryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  categoryName: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "500",
   },
   switchContainer: {
     flexDirection: "row",

@@ -181,6 +181,11 @@ export default function TodoListScreen() {
       fontSize: 16,
       textAlign: "center",
     },
+    timerTimeWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 4,
+    },
   });
 
   // Update the timerTodos list
@@ -278,6 +283,48 @@ export default function TodoListScreen() {
       ? `${todo.color}22` // 13% opacity for dark mode
       : `${todo.color}15`; // 8% opacity for light mode
 
+    // Choose appropriate icon based on the task content
+    const getTaskIcon = () => {
+      const title = todo.title.toLowerCase();
+      if (
+        title.includes("meet") ||
+        title.includes("call") ||
+        title.includes("chat")
+      )
+        return "people-outline";
+      if (
+        title.includes("email") ||
+        title.includes("mail") ||
+        title.includes("message")
+      )
+        return "mail-outline";
+      if (
+        title.includes("review") ||
+        title.includes("read") ||
+        title.includes("study")
+      )
+        return "book-outline";
+      if (
+        title.includes("buy") ||
+        title.includes("shop") ||
+        title.includes("purchase")
+      )
+        return "cart-outline";
+      if (
+        title.includes("gym") ||
+        title.includes("workout") ||
+        title.includes("exercise")
+      )
+        return "fitness-outline";
+      if (
+        title.includes("eat") ||
+        title.includes("food") ||
+        title.includes("dinner")
+      )
+        return "restaurant-outline";
+      return "document-text-outline";
+    };
+
     return (
       <TouchableOpacity
         key={todo.id}
@@ -295,11 +342,8 @@ export default function TodoListScreen() {
         onPress={() => {
           if (hasDescription) {
             setExpandedTodoId(isExpanded ? null : todo.id);
-          } else {
-            toggleTodo(todo.id);
           }
         }}
-        onLongPress={() => toggleTodo(todo.id)}
         activeOpacity={0.7}
       >
         <View style={styles.todoContent}>
@@ -307,7 +351,8 @@ export default function TodoListScreen() {
             <View
               style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
             >
-              <View
+              <TouchableOpacity
+                onPress={() => toggleTodo(todo.id)}
                 style={[
                   styles.checkbox,
                   { borderColor: todo.color },
@@ -317,34 +362,56 @@ export default function TodoListScreen() {
                 {todo.completed && (
                   <Ionicons name="checkmark" size={16} color="white" />
                 )}
-              </View>
+              </TouchableOpacity>
 
-              <Text
-                style={[
-                  styles.todoTitle,
-                  {
-                    color: isDark ? "#ffffff" : "#2d2d3a",
-                    textDecorationLine: todo.completed
-                      ? "line-through"
-                      : "none",
-                    opacity: todo.completed ? 0.7 : 1,
-                    marginLeft: 12,
-                  },
-                ]}
-              >
-                {todo.title}
-              </Text>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text
+                  style={[
+                    styles.todoTitle,
+                    {
+                      color: isDark ? "#ffffff" : "#2d2d3a",
+                      textDecorationLine: todo.completed
+                        ? "line-through"
+                        : "none",
+                      opacity: todo.completed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  {todo.title}
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 4,
+                  }}
+                >
+                  <Ionicons
+                    name="time-outline"
+                    size={14}
+                    color={isDark ? "#adb5bd" : "#5a5a6e"}
+                    style={{ opacity: 0.8, marginRight: 4 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDark ? "#adb5bd" : "#5a5a6e",
+                      opacity: 0.8,
+                    }}
+                  >
+                    {formatDate(todo.time)}
+                  </Text>
+                </View>
+              </View>
             </View>
 
-            <Text
-              style={{
-                fontSize: 12,
-                color: isDark ? "#adb5bd" : "#5a5a6e",
-                opacity: 0.8,
-              }}
-            >
-              {formatDate(todo.time)}
-            </Text>
+            <Ionicons
+              name={getTaskIcon()}
+              size={22}
+              color={todo.color}
+              style={{ opacity: 0.8 }}
+            />
           </View>
 
           {hasDescription && (
@@ -396,6 +463,9 @@ export default function TodoListScreen() {
     const seconds = remaining % 60;
     const formattedTime = `${minutes}:${seconds.toString().padStart(2, "0")}`;
 
+    // Determine if timer is getting low
+    const isAlmostDone = remaining <= 30;
+
     return (
       <View
         style={[
@@ -410,18 +480,44 @@ export default function TodoListScreen() {
       >
         <View style={styles.timerHeader}>
           <View style={styles.timerInfo}>
-            <Text
-              style={[
-                styles.timerTitle,
-                { color: isDark ? "#ffffff" : "#2d2d3a" },
-              ]}
-            >
-              {todo.title}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons
+                name="timer-outline"
+                size={20}
+                color={todo.color}
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={[
+                  styles.timerTitle,
+                  { color: isDark ? "#ffffff" : "#2d2d3a" },
+                ]}
+              >
+                {todo.title}
+              </Text>
+            </View>
 
-            <Text style={[styles.timerTimeDisplay, { color: todo.color }]}>
-              {formattedTime}
-            </Text>
+            <View style={styles.timerTimeWrapper}>
+              <Text
+                style={[
+                  styles.timerTimeDisplay,
+                  {
+                    color: isAlmostDone ? "#FF6B6B" : todo.color,
+                    fontSize: isAlmostDone ? 32 : 28,
+                  },
+                ]}
+              >
+                {formattedTime}
+              </Text>
+              {isAlmostDone && (
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#FF6B6B"
+                  style={{ marginLeft: 6, alignSelf: "flex-start" }}
+                />
+              )}
+            </View>
           </View>
 
           <TouchableOpacity
@@ -451,7 +547,11 @@ export default function TodoListScreen() {
               style={[
                 styles.timerProgress,
                 {
-                  backgroundColor: todo.color,
+                  backgroundColor: isAlmostDone
+                    ? remaining <= 10
+                      ? "#FF6B6B"
+                      : "#FFA500"
+                    : todo.color,
                   width: `${progress * 100}%`,
                 },
               ]}
